@@ -13,6 +13,7 @@ limitations under the License.
 <!DOCTYPE html>
 <h1>TransformStream webm wasm demo</h1>
 <button id="go">Go</button>
+<a id="download" href="#" download="TransformStream.webm" hidden>Download</a>
 <script>
   const framerate = 30;
   const bitrate = 200;
@@ -78,7 +79,7 @@ limitations under the License.
       }
     });
   }
-
+  let chunks = [];
   // Takes a `ReadableStream` and turns it onto a `MediaStream` URL using MSE.
   function mediaSourceStream(stream, { mimeType }) {
     const mediaSource = new MediaSource();
@@ -87,6 +88,7 @@ limitations under the License.
       stream.pipeTo(
         new WritableStream({
           async write(chunk) {
+            chunks.push(chunk);
             sourceBuffer.appendBuffer(chunk);
             // This turns MSE backpressure into WHATWG Stream backpressure.
             await nextEvent(sourceBuffer, "updateend");
@@ -137,7 +139,12 @@ limitations under the License.
     video.src = webmMediaStream;
     document.body.append(video);
     video.play();
+    document.all.download.hidden = false;
   }
 
   document.all.go.onclick = init;
+  document.all.download.onclick = () => {
+    const blob = new Blob(chunks, { type: "video/webm" });
+    document.all.download.href = URL.createObjectURL(blob);
+  };
 </script>
